@@ -1,0 +1,105 @@
+name: Queue Manga Processors
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 23:00 за Києвом (20:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  process-add-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Process /manga_add queue
+        working-directory: code
+        env:
+          MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
+          MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+        run: |
+          echo "Обробка черги /manga_add"
+          python -m new_parsers.manga_in_ua.queue_add_parser
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_MANGA_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_MANGA_CHAT_ID}" \
+            -d text="_Сталася помилка при обробці /manga\\_add_" \
+            -d parse_mode="MarkdownV2"
+
+  process-parse-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: process-add-queue
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Process /manga_parse queue
+        working-directory: code
+        env:
+          MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
+          MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+        run: |
+          echo "Обробка черги /manga_parse"
+          python -m new_parsers.manga_in_ua.queue_parse_parser
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_MANGA_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_MANGA_CHAT_ID}" \
+            -d text="_Сталася помилка при обробці /manga\\_parse_" \
+            -d parse_mode="MarkdownV2"
+

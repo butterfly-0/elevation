@@ -1,0 +1,56 @@
+name: Quick Manga Discovery
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # 00:00 за Києвом (21:00 UTC попереднього дня)
+  workflow_dispatch:
+
+jobs:
+  quick-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Run quick discovery parser
+        working-directory: code
+        env:
+          MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
+          MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+        run: |
+          echo "Запуск Quick Manga Discovery"
+          python -m new_parsers.manga_in_ua.quick_discovery_parser
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_MANGA_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_MANGA_CHAT_ID}" \
+            -d text="_Сталася помилка в Quick Manga Discovery_" \
+            -d parse_mode="MarkdownV2"
+
