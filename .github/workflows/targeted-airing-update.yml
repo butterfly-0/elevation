@@ -8,7 +8,7 @@ on:
 jobs:
   targeted-update:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 315
     
     steps:
       - name: Checkout private code repository
