@@ -8,7 +8,7 @@ on:
 jobs:
   add-anime-parser:
     runs-on: ubuntu-latest
-    timeout-minutes: 315
+    timeout-minutes: 180
     
     steps:
       - name: Checkout private code repository
@@ -34,7 +34,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          TELEGRAM_ADD_BOT_TOKEN: ${{ secrets.TELEGRAM_ADD_BOT_TOKEN }}
+          TELEGRAM_ANIME_BOT_TOKEN: ${{ secrets.TELEGRAM_ANIME_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
         run: |
@@ -44,10 +44,10 @@ jobs:
       - name: Notify on failure
         if: failure()
         env:
-          TELEGRAM_ADD_BOT_TOKEN: ${{ secrets.TELEGRAM_ADD_BOT_TOKEN }}
+          TELEGRAM_ANIME_BOT_TOKEN: ${{ secrets.TELEGRAM_ANIME_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          curl -X POST "https://api.telegram.org/bot${TELEGRAM_ADD_BOT_TOKEN}/sendMessage" \
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_ANIME_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="_Сталася помилка в Add Anime Parser_" \
             -d parse_mode="MarkdownV2"

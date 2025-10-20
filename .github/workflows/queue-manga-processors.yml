@@ -8,7 +8,7 @@ on:
 jobs:
   process-add-queue:
     runs-on: ubuntu-latest
-    timeout-minutes: 315
+    timeout-minutes: 180
     
     steps:
       - name: Checkout private code repository
