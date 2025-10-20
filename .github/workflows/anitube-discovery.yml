@@ -1,0 +1,55 @@
+name: AniTube Discovery
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Щодня о 06:00 за Києвом (03:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  discover-new-anime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Run AniTube Discovery Parser
+        working-directory: code
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          TELEGRAM_MANAGEMENT_BOT_TOKEN: ${{ secrets.TELEGRAM_MANAGEMENT_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+        run: |
+          echo " Запуск AniTube Discovery Parser"
+          python -m new_parsers.anitube.discovery_parser
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_MANAGEMENT_BOT_TOKEN: ${{ secrets.TELEGRAM_ANIME_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_ANIME_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text=" _Помилка в AniTube Discovery Parser_" \
+            -d parse_mode="MarkdownV2"
+
+
