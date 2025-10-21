@@ -1,0 +1,70 @@
+name: Zenko Chapters Update
+
+on:
+  schedule:
+    # Щодня о 12:00 та 18:00 UTC (15:00 та 21:00 Київ)
+    - cron: '0 12,18 * * *'
+  workflow_dispatch:
+    inputs:
+      max_manga:
+        description: 'Максимальна кількість манги для оновлення'
+        required: false
+        default: '50'
+      days_old:
+        description: 'Оновлювати мангу старшу за N днів'
+        required: false
+        default: '7'
+
+jobs:
+  update-chapters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Run Zenko Chapters Update
+        working-directory: code
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
+          MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+          MAX_MANGA: ${{ github.event.inputs.max_manga || '50' }}
+          DAYS_OLD: ${{ github.event.inputs.days_old || '7' }}
+        run: |
+          echo "Запуск Zenko Chapters Update"
+          python -m new_parsers.manga_in_ua.zenko_chapters_update
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
+          TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_MANGA_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_MANGA_CHAT_ID}" \
+            -d text="Сталася помилка в Zenko Chapters Update" \
+            -d parse_mode="HTML"
+
