@@ -1,0 +1,65 @@
+name: Fix Recent Episodes
+
+on:
+  schedule:
+    - cron: '0 */48 * * *'  # Кожні 2 дні (48 годин)
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Кількість днів для фільтрації'
+        required: false
+        default: '4'
+      test_slug:
+        description: 'Тестовий medy_slug (опціонально)'
+        required: false
+
+jobs:
+  fix-episodes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+      - name: Checkout private code repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: code
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: code
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r new_parsers/requirements.txt
+      
+      - name: Run fix recent episodes
+        working-directory: code
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
+        run: |
+          echo "Запуск Fix Recent Episodes"
+          if [ -n "${{ github.event.inputs.test_slug }}" ]; then
+            echo "Тестовий режим: ${{ github.event.inputs.test_slug }}"
+            python -m new_parsers.fix_recent_episodes --test-slug "${{ github.event.inputs.test_slug }}" --days "${{ github.event.inputs.days || '4' }}"
+          else
+            python -m new_parsers.fix_recent_episodes --days "${{ github.event.inputs.days || '4' }}"
+          fi
+      
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_ANIME_BOT_TOKEN: ${{ secrets.TELEGRAM_ANIME_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_ANIME_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="⚠️ _Сталася помилка в Fix Recent Episodes_" \
+            -d parse_mode="MarkdownV2"
+
