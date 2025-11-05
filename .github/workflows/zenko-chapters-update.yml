@@ -1,4 +1,4 @@
-name: Zenko Chapters Update
+name: Smart Zenko Chapters Update
 
 on:
   schedule:
@@ -10,10 +10,10 @@ on:
         description: 'Максимальна кількість манги для оновлення'
         required: false
         default: '50'
-      days_old:
-        description: 'Оновлювати мангу старшу за N днів'
+      zenko_fetch_limit:
+        description: 'Скільки останніх оновлених манг отримати з Zenko API'
         required: false
-        default: '7'
+        default: '100'
 
 jobs:
   update-chapters:
@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r new_parsers/requirements.txt
       
-      - name: Run Zenko Chapters Update
+      - name: Run Smart Zenko Chapters Update
         working-directory: code
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -52,10 +52,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
           PARSER_PROXY: ${{ secrets.PARSER_PROXY }}
           MAX_MANGA: ${{ github.event.inputs.max_manga || '50' }}
-          DAYS_OLD: ${{ github.event.inputs.days_old || '7' }}
+          ZENKO_FETCH_LIMIT: ${{ github.event.inputs.zenko_fetch_limit || '100' }}
         run: |
-          echo "Запуск Zenko Chapters Update"
-          python -m new_parsers.manga_in_ua.zenko_chapters_update
+          echo "Запуск Smart Zenko Chapters Update (оптимізований - парсить тільки нові розділи)"
+          python -m new_parsers.manga_in_ua.zenko_chapters_update_smart
       
       - name: Notify on failure
         if: failure()
