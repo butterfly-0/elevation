@@ -32,8 +32,6 @@ jobs:
       - name: Process /manga_add queue
         working-directory: code
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
           MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
