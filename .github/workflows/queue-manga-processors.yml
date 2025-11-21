@@ -34,6 +34,10 @@ jobs:
         env:
           MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
           MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          MANGA_IN_UA_LOGIN: ${{ secrets.MANGA_IN_UA_LOGIN }}
+          MANGA_IN_UA_PASSWORD: ${{ secrets.MANGA_IN_UA_PASSWORD }}
           TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
           TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
@@ -83,6 +87,10 @@ jobs:
         env:
           MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
           MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          MANGA_IN_UA_LOGIN: ${{ secrets.MANGA_IN_UA_LOGIN }}
+          MANGA_IN_UA_PASSWORD: ${{ secrets.MANGA_IN_UA_PASSWORD }}
           TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
           TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
