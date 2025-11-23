@@ -13,7 +13,7 @@ on:
       max_parse:
         description: 'Максимальна кількість нової манги для парсингу'
         required: false
-        default: '10'
+        default: '20'
 
 jobs:
   discover-new-manga:

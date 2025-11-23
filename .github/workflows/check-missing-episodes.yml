@@ -8,7 +8,7 @@ on:
 jobs:
   check-episodes:
     runs-on: ubuntu-latest
-    timeout-minutes: 230
+    timeout-minutes: 360
     
     steps:
       - name: Checkout private code repository

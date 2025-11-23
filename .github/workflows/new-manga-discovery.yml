@@ -34,6 +34,8 @@ jobs:
         env:
           MANGA_SUPABASE_URL: ${{ secrets.MANGA_SUPABASE_URL }}
           MANGA_SUPABASE_KEY: ${{ secrets.MANGA_SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           TELEGRAM_MANGA_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
           TELEGRAM_MANGA_CHAT_ID: ${{ secrets.TELEGRAM_MANGA_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_MANGA_BOT_TOKEN }}
